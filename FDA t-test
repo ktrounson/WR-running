@@ -1,0 +1,58 @@
+# Import hip angle data files separated by Condition (BW, 1%, 3%, 5%) with Frame as rows and Rep as columns
+# Transform data into 2D arrays
+
+Rep <- as.list(colnames(BW_hip))
+Frame <- as.list(1:100)
+hip_bw_matrix <- data.matrix(BW_hip)
+hip_bw_array<-array(c(hip_bw_matrix),dim=c(100,124),dimnames=list(Frame,Rep))
+hip_bw_array <- hip_bw_array[!is.na(hip_bw_array)]
+hip_bw_array<-array(c(hip_bw_array),dim=c(100,124),dimnames=list(Frame,Rep))
+
+Rep <- as.list(colnames(OneP_hip))
+Frame <- as.list(1:100)
+hip_OneP_matrix <- data.matrix(OneP_hip)
+hip_OneP_array<-array(c(hip_OneP_matrix),dim=c(100,132),dimnames=list(Frame,Rep))
+hip_OneP_array <- hip_OneP_array[!is.na(hip_OneP_array)]
+hip_OneP_array<-array(c(hip_OneP_array),dim=c(100,132),dimnames=list(Frame,Rep))
+
+Rep <- as.list(colnames(ThreeP_hip))
+Frame <- as.list(1:100)
+hip_ThreeP_matrix <- data.matrix(ThreeP_hip)
+hip_ThreeP_array<-array(c(hip_ThreeP_matrix),dim=c(100,128),dimnames=list(Frame,Rep))
+hip_ThreeP_array <- hip_ThreeP_array[!is.na(hip_ThreeP_array)]
+hip_ThreeP_array<-array(c(hip_ThreeP_array),dim=c(100,128),dimnames=list(Frame,Rep))
+
+Rep <- as.list(colnames(FiveP_hip))
+Frame <- as.list(1:100)
+hip_FiveP_matrix <- data.matrix(FiveP_hip)
+hip_FiveP_array<-array(c(hip_FiveP_matrix),dim=c(100,126),dimnames=list(Frame,Rep))
+hip_FiveP_array <- hip_FiveP_array[!is.na(hip_FiveP_array)]
+hip_FiveP_array<-array(c(hip_FiveP_array),dim=c(100,126),dimnames=list(Frame,Rep))
+
+# Set up a basis system to hold the smooths
+
+Frame <- as.vector(1:100)
+knots <- Frame
+norder <- 6
+nbasis <- length(knots) + norder - 2
+framerange <- c(0, 100)
+Ttestbasis <- create.bspline.basis(range(knots), nbasis, norder, knots)
+
+# Smooth with a fourth-derivative penalty and a very small smoothing parameter
+
+Lfdobj <- 4
+lambda <- 1e-2
+Ttestfdpar <- fdPar(Ttestbasis, Lfdobj, lambda)
+
+HBW <- smooth.basis(Frame, hip_bw_array, Ttestfdpar)$fd
+HOP <- smooth.basis(Frame, hip_OneP_array, Ttestfdpar)$fd
+HTP <- smooth.basis(Frame, hip_ThreeP_array, Ttestfdpar)$fd
+HFP <- smooth.basis(Frame, hip_FiveP_array, Ttestfdpar)$fd
+
+# Call tperm.fd
+
+tres <- tperm.fd(HBW,HOP)
+tres1 <- tperm.fd(HBW,HTP)
+tres2 <- tperm.fd(HBW,HFP)
+
+# Repeat for knee and ankle data
