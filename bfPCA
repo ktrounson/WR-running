@@ -91,3 +91,5 @@ op <- par(mfrow=c(2,2))
 plot.pca.fd(gaitpca.fd, expand = 100, cycle=TRUE)
 
 par(op)
+
+# Repeat for Knee and Ankle angle data
