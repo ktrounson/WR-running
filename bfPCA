@@ -73,11 +73,16 @@ names(gaitfd$fdnames) <- c("Time", "Run", "Angle")
 
 gaitfd$fdnames[[3]] <- c("Hip", "Knee")
 
+# Do the PCA with varimax rotation
+# Smooth with lambda as determined above
+
 gaitfdPar <- fdPar(gaitbasis, harmaccelLfd, lambda=1e-1)
 
 gaitpca.fd <- pca.fd(gaitfd, nharm=4, gaitfdPar)
 
 gaitpca.fd <- varmx.pca.fd(gaitpca.fd)
+
+# Plot harmonics using cycle plots
 
 par(mfrow=c(1,1), mar=c(3,4,2,1), pty="s")
 
@@ -86,29 +91,3 @@ op <- par(mfrow=c(2,2))
 plot.pca.fd(gaitpca.fd, expand = 100, cycle=TRUE)
 
 par(op)
-
-pca1_scores <- as.vector(gaitpca.fd$scores[,1,1])
-
-pca2_scores <- as.vector(gaitpca.fd$scores[,2,1])
-
-gaitmeanvec = gaitpca.fd$meanfd
-gaitmeanvec = eval.fd(gaittime,gaitmeanvec)
-
-gaitharmfd <- gaitpca.fd$harmonics
-gaitharmmat <- eval.fd(gaittime, gaitharmfd)
-
-eig = gaitpca.fd$values
-
-mean = data.frame(hip  = gaitmeanvec[,,1], knee = gaitmeanvec[,,2])
-iharm = 1
-fac=sqrt(eig[iharm])
-pc1meanplus = mean + fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
-pc1meanminus = mean - fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
-
-iharm = 2
-fac=sqrt(eig[iharm])
-pc2meanplus = mean + fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
-pc2meanminus = mean - fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
-
-ggplot(mean, aes(x=hip, y=knee))+
-  geom_path(data = mean)
