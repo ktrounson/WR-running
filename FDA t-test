@@ -1,33 +1,33 @@
-# Import hip angle data files separated by Condition (BW, 1%, 3%, 5%) with Frame as rows and Rep as columns
+# Import hip angle data files separated by Condition (BW, 1%, 3%, 5%) with Frame as rows and Run as columns
 # Transform data into 2D arrays
 
-Rep <- as.list(colnames(BW_hip))
+Run <- as.list(colnames(BW_hip))
 Frame <- as.list(1:100)
 hip_bw_matrix <- data.matrix(BW_hip)
-hip_bw_array<-array(c(hip_bw_matrix),dim=c(100,124),dimnames=list(Frame,Rep))
+hip_bw_array<-array(c(hip_bw_matrix),dim=c(100,124),dimnames=list(Frame,Run))
 hip_bw_array <- hip_bw_array[!is.na(hip_bw_array)]
-hip_bw_array<-array(c(hip_bw_array),dim=c(100,124),dimnames=list(Frame,Rep))
+hip_bw_array<-array(c(hip_bw_array),dim=c(100,124),dimnames=list(Frame,Run))
 
-Rep <- as.list(colnames(OneP_hip))
+Run <- as.list(colnames(OneP_hip))
 Frame <- as.list(1:100)
 hip_OneP_matrix <- data.matrix(OneP_hip)
-hip_OneP_array<-array(c(hip_OneP_matrix),dim=c(100,132),dimnames=list(Frame,Rep))
+hip_OneP_array<-array(c(hip_OneP_matrix),dim=c(100,132),dimnames=list(Frame,Run))
 hip_OneP_array <- hip_OneP_array[!is.na(hip_OneP_array)]
-hip_OneP_array<-array(c(hip_OneP_array),dim=c(100,132),dimnames=list(Frame,Rep))
+hip_OneP_array<-array(c(hip_OneP_array),dim=c(100,132),dimnames=list(Frame,Run))
 
-Rep <- as.list(colnames(ThreeP_hip))
+Run <- as.list(colnames(ThreeP_hip))
 Frame <- as.list(1:100)
 hip_ThreeP_matrix <- data.matrix(ThreeP_hip)
-hip_ThreeP_array<-array(c(hip_ThreeP_matrix),dim=c(100,128),dimnames=list(Frame,Rep))
+hip_ThreeP_array<-array(c(hip_ThreeP_matrix),dim=c(100,128),dimnames=list(Frame,Run))
 hip_ThreeP_array <- hip_ThreeP_array[!is.na(hip_ThreeP_array)]
-hip_ThreeP_array<-array(c(hip_ThreeP_array),dim=c(100,128),dimnames=list(Frame,Rep))
+hip_ThreeP_array<-array(c(hip_ThreeP_array),dim=c(100,128),dimnames=list(Frame,Run))
 
-Rep <- as.list(colnames(FiveP_hip))
+Run <- as.list(colnames(FiveP_hip))
 Frame <- as.list(1:100)
 hip_FiveP_matrix <- data.matrix(FiveP_hip)
-hip_FiveP_array<-array(c(hip_FiveP_matrix),dim=c(100,126),dimnames=list(Frame,Rep))
+hip_FiveP_array<-array(c(hip_FiveP_matrix),dim=c(100,126),dimnames=list(Frame,Run))
 hip_FiveP_array <- hip_FiveP_array[!is.na(hip_FiveP_array)]
-hip_FiveP_array<-array(c(hip_FiveP_array),dim=c(100,126),dimnames=list(Frame,Rep))
+hip_FiveP_array<-array(c(hip_FiveP_array),dim=c(100,126),dimnames=list(Frame,Run))
 
 # Set up a basis system to hold the smooths
 
