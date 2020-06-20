@@ -1,0 +1,24 @@
+library(tidyverse)
+library(fda)
+library(ggtext)
+
+# Import hip angle data with Frame as rows and Run as columns
+
+merged_ankle$Reference <- paste(merged_ankle$subject_id, merged_ankle$Replicate)
+write.csv(merged_ankle,'merged_ankle.csv')
+
+#ID04 3P10, ID04 3P8, ID04 3P9, ID04 BW10, ID04 BW3, ID04 BW4, ID04 BW5, ID04 BW6, ID04 BW7, ID04 BW8, ID07 5P6, ID07 BW10, ID07 BW8, ID07 BW9, ID08 5P4, ID08 5P5, ID08 5P6, ID08 5P7, ID09 3P10,
+all_angles2 <- filter(all_angles, Reference!="ID04 3P10" & Reference!="ID04 3P8" & Reference!="ID04 3P9" & Reference!="ID04 BW10" & Reference!="ID04 BW3" & Reference!="ID04 BW4" & Reference!="ID04 BW5" & Reference!="ID04 BW6" & Reference!="ID04 BW7" & Reference!="ID04 BW8" & Reference!="ID07 5P6" & Reference!="ID07 BW10" & Reference!="ID07 BW8" & Reference!="ID07 BW9" & Reference!="ID08 5P4" & Reference!="ID08 5P5" & Reference!="ID08 5P6" & Reference!="ID08 5P7" & Reference!="ID09 3P10")
+
+k_angle_frame <- k_angle_frame*-1
+h_angle_matrix <- data.matrix(h_angle_frame)
+k_angle_matrix <- data.matrix(k_angle_frame)
+
+Rep <- as.list(colnames(h_angle_frame))
+Frame <- as.list(1:100)
+Joint <- c("hip","knee")
+
+arrayvian<-array(c(h_angle_matrix,k_angle_matrix),dim=c(100,510,2),dimnames=list(Frame,Rep,Joint))
+
+arrayvian2 <- arrayvian[!is.na(arrayvian)]
+arrayvian2 <- array(c(arrayvian2),dim=c(100,510,2),dimnames=list(Frame,Rep,Joint))
