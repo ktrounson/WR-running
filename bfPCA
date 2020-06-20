@@ -3,22 +3,112 @@ library(fda)
 library(ggtext)
 
 # Import hip angle data with Frame as rows and Run as columns
+# Import knee angle data with Frame as rows and Run as columns
+# Transform data into a 3D array
 
-merged_ankle$Reference <- paste(merged_ankle$subject_id, merged_ankle$Replicate)
-write.csv(merged_ankle,'merged_ankle.csv')
+hip_angle_matrix <- data.matrix(hip_angles)
+knee_angle_matrix <- data.matrix(knee_angles)
 
-#ID04 3P10, ID04 3P8, ID04 3P9, ID04 BW10, ID04 BW3, ID04 BW4, ID04 BW5, ID04 BW6, ID04 BW7, ID04 BW8, ID07 5P6, ID07 BW10, ID07 BW8, ID07 BW9, ID08 5P4, ID08 5P5, ID08 5P6, ID08 5P7, ID09 3P10,
-all_angles2 <- filter(all_angles, Reference!="ID04 3P10" & Reference!="ID04 3P8" & Reference!="ID04 3P9" & Reference!="ID04 BW10" & Reference!="ID04 BW3" & Reference!="ID04 BW4" & Reference!="ID04 BW5" & Reference!="ID04 BW6" & Reference!="ID04 BW7" & Reference!="ID04 BW8" & Reference!="ID07 5P6" & Reference!="ID07 BW10" & Reference!="ID07 BW8" & Reference!="ID07 BW9" & Reference!="ID08 5P4" & Reference!="ID08 5P5" & Reference!="ID08 5P6" & Reference!="ID08 5P7" & Reference!="ID09 3P10")
-
-k_angle_frame <- k_angle_frame*-1
-h_angle_matrix <- data.matrix(h_angle_frame)
-k_angle_matrix <- data.matrix(k_angle_frame)
-
-Rep <- as.list(colnames(h_angle_frame))
+Run <- as.list(colnames(hip_angles))
 Frame <- as.list(1:100)
 Joint <- c("hip","knee")
 
-arrayvian<-array(c(h_angle_matrix,k_angle_matrix),dim=c(100,510,2),dimnames=list(Frame,Rep,Joint))
+hip_knee_array <- array(c(hip_angle_matrix,knee_angle_matrix),dim=c(100,510,2),dimnames=list(Frame,Run,Joint))
 
-arrayvian2 <- arrayvian[!is.na(arrayvian)]
-arrayvian2 <- array(c(arrayvian2),dim=c(100,510,2),dimnames=list(Frame,Rep,Joint))
+(gaittime <- as.numeric(dimnames(hip_knee_array)[[1]])*1)
+
+gaitrange <- c(0,100)
+
+apply(hip_knee_array, 3, range)
+
+# Set up the harmonic acceleration operator
+
+harmaccelLfd <- vec2Lfd(c(0, (2*pi/100)^2, 0), rangeval=gaitrange)
+
+# Set up basis for representing gait data
+
+gaitbasis <- create.fourier.basis(gaitrange, nbasis=101)
+
+# Choose level of smoothing using the generalized cross-validation criterion
+# Set up range of smoothing parameters in log_10 units
+
+gaitLoglam <- seq(-4,0,0.25)
+nglam <- length(gaitLoglam)
+
+gaitSmoothStats <- array(NA, dim=c(nglam, 3),
+                         dimnames=list(gaitLoglam, c("log10.lambda", "df", "gcv") ) )
+gaitSmoothStats[, 1] <- gaitLoglam
+
+# Loop through smoothing parameters
+
+for (ilam in 1:nglam) {
+  gaitSmooth <- smooth.basisPar(gaittime, arrayvian2, gaitbasis,
+                                Lfdobj=harmaccelLfd, lambda=10^gaitLoglam[ilam])
+  gaitSmoothStats[ilam, "df"]  <- gaitSmooth$df
+  gaitSmoothStats[ilam, "gcv"] <- sum(gaitSmooth$gcv)
+}
+
+#  Display and plot GCV criterion and degrees of freedom
+
+gaitSmoothStats
+
+plot(gaitLoglam, gaitSmoothStats[, "gcv"],
+     type="b", xlab="Log_10 lambda", ylab="GCV Criterion",
+     main="Gait Smoothing", log="y")
+plot(gaitLoglam, gaitSmoothStats[, "df"], type="b",
+     xlab="Log_10 lambda", ylab="Degrees of freedom",
+     main="Gait Smoothing")
+
+#GCV minimised with lambda = 10^(-1)
+
+str(hip_knee_array)
+
+gaitfd <- smooth.basisPar(gaittime, hip_knee_array,
+                          gaitbasis, Lfdobj=harmaccelLfd, lambda=1e-1)$fd
+
+
+str(gaitfd)
+
+names(gaitfd$fdnames) <- c("Time", "Run", "Angle")
+
+gaitfd$fdnames[[3]] <- c("Hip", "Knee")
+
+gaitfdPar <- fdPar(gaitbasis, harmaccelLfd, lambda=1e-1)
+
+gaitpca.fd <- pca.fd(gaitfd, nharm=4, gaitfdPar)
+
+gaitpca.fd <- varmx.pca.fd(gaitpca.fd)
+
+par(mfrow=c(1,1), mar=c(3,4,2,1), pty="s")
+
+op <- par(mfrow=c(2,2))
+
+plot.pca.fd(gaitpca.fd, expand = 100, cycle=TRUE)
+
+par(op)
+
+pca1_scores <- as.vector(gaitpca.fd$scores[,1,1])
+
+pca2_scores <- as.vector(gaitpca.fd$scores[,2,1])
+
+gaitmeanvec = gaitpca.fd$meanfd
+gaitmeanvec = eval.fd(gaittime,gaitmeanvec)
+
+gaitharmfd <- gaitpca.fd$harmonics
+gaitharmmat <- eval.fd(gaittime, gaitharmfd)
+
+eig = gaitpca.fd$values
+
+mean = data.frame(hip  = gaitmeanvec[,,1], knee = gaitmeanvec[,,2])
+iharm = 1
+fac=sqrt(eig[iharm])
+pc1meanplus = mean + fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
+pc1meanminus = mean - fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
+
+iharm = 2
+fac=sqrt(eig[iharm])
+pc2meanplus = mean + fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
+pc2meanminus = mean - fac *data.frame(gaitharmmat[,iharm, 1], gaitharmmat[,iharm, 2])
+
+ggplot(mean, aes(x=hip, y=knee))+
+  geom_path(data = mean)
