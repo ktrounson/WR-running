@@ -7,13 +7,18 @@ library(mgcv)
 model_hip <-
   bam(
     hip_angle ~
-      s(frame, by = Treatment, bs = "cc", k = 15),
-    method = "REML", 
+      s(frame, bs = "cc", k = 15) +
+      s(frame, bs = "cc", by = Treatment, k = 15, m = 1) +
+      s(Run, bs = "fs", k = 15) +
+      Treatment,
+    method = "REML",
     data = hip_angles
   )
 
 # Generate model output
 summary(model_hip)
+
+# Extract individual s(Run) random effects from model_hip$coefficients
 
 # Repeat for knee angle data
 
@@ -22,11 +27,16 @@ knee_angles$Treatment <- factor(knee_angles$Treatment, levels = c("Body weight",
 model_knee <-
   bam(
     knee_angle ~
-      s(frame, by = Treatment, bs = "cc", k = 10),
-    method = "REML", 
+      s(frame, bs = "cc", k = 10) +
+      s(frame, bs = "cc", by = Treatment, k = 10, m = 1) +
+      s(Run, bs = "fs", k = 10) +
+      Treatment,
+    method = "REML",
     data = knee_angles
   )
-  
+
+# Extract individual s(Run) random effects from model_knee$coefficients
+
 # Repeat for ankle angle data
 
 ankle_angles$Treatment <- factor(ankle_angles$Treatment, levels = c("Body weight", "1%", "3%", "5%"))
@@ -34,49 +44,12 @@ ankle_angles$Treatment <- factor(ankle_angles$Treatment, levels = c("Body weight
 model_ankle <-
   bam(
     ankle_angle ~
-      s(frame, by = Treatment, bs = "cc", k = 23),
-    method = "REML", 
-    data = ankle_angles
-  )
-  
-# Individual-Run GAMs
-# Import hip angle data as data frame with columns for Participant, Treatment, Run, Gait percent, and Hip angle
-# Bind Participant, Treatment, and Run columns to create unique label for each run
-
-hip_angles$Reference <- paste(hip_angles$Participant, hip_angles$Replicate, hip_angles$Run)
-hip_angles$Reference <- as.factor(hip_angles$Reference)
-model_hip <-
-  bam(
-    hip_angle ~
-      s(frame, bs = "cc", k = 15) +
-      Reference,
-    method = "REML", 
-    data = hip_angles
-  )
-  
-# Extract coefficient estimates from model_hip$coefficients
-# Repeat for knee angle data
-
-knee_angles$Reference <- paste(knee_angles$Participant, knee_angles$Replicate, knee_angles$Run)
-knee_angles$Reference <- as.factor(knee_angles$Reference)
-model_knee <-
-  bam(
-    knee_angle ~
-      s(frame, bs = "cc", k = 10) +
-      Reference,
-    method = "REML", 
-    data = knee_angles
-  )
-  
-# Repeat for ankle angle data
-
-ankle_angles$Reference <- paste(ankle_angles$Participant, ankle_angles$Replicate, ankle_angles$Run)
-ankle_angles$Reference <- as.factor(ankle_angles$Reference)
-model_ankle <-
-  bam(
-    ankle_angle ~
       s(frame, bs = "cc", k = 23) +
-      Reference,
-    method = "REML", 
+      s(frame, bs = "cc", by = Treatment, k = 23, m = 1) +
+      s(Run, bs = "fs", k = 23) +
+      Treatment,
+    method = "REML",
     data = ankle_angles
   )
+
+# Extract individual s(Run) random effects from model_ankle$coefficients
